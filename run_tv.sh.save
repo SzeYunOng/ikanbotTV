@@ -1,0 +1,44 @@
+#!/bin/bash
+set -e
+
+PACKAGE="com.ikanbot.tv"
+ACTIVITY=".MainActivity"
+
+echo "[1/6] Building & installing..."
+./gradlew installDebug
+
+echo "[2/6] Granting READ_LOGS..."
+adb shell pm grant "$PACKAGE" android.permission.READ_LOGS
+
+echo "[3/6] Waiting for Android to register services..."
+sleep 2
+
+echo "[4/6] Enabling Accessibility..."
+./auto_enable_accessibility.sh
+sleep 1
+
+echo "[5/6] Verifying Accessibility..."
+
+SERVICES=$(adb shell settings get secure enabled_accessibility_services | tr -d '\r')
+ENABLED=$(adb shell settings get secure accessibility_enabled | tr -d '\r')
+
+echo "Services: $SERVICES"
+echo "Enabled:  $ENABLED"
+
+if [[ "$SERVICES" != *"com.ikanbot.tv/.TVAccessibilityService"* ]] || [[ "$ENABLED" != "1" ]]; then
+    echo "✗ Accessibility failed to enable"
+    exit 1
+fi
+
+echo "[6/6] Launching ikanbotTV..."
+
+adb shell am force-stop "$PACKAGE"
+adb shell am start -n "$PACKAGE/$ACTIVITY"
+
+echo "✓ ikanbotTV ready"
+
+
+
+
+
+
