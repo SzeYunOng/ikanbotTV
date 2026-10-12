@@ -754,6 +754,7 @@ object PageLayoutScripts {
         );
 
     })();
+    
     """.trimIndent()
     }
 }
